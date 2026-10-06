@@ -1,0 +1,12 @@
+{
+  "name": "portfolio",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Abimbola Daniel Temitope — portfolio with a Vercel serverless contact API",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "resend": "^4.0.0"
+  },
+  "engines": { "node": ">=18" }
+}
