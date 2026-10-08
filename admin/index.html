@@ -94,6 +94,7 @@ function discover(){
     var d=new DOMParser().parseFromString(h,'text/html'),fields=[];
     d.querySelectorAll('[data-cms]').forEach(function(e){fields.push({key:e.dataset.cms,kind:'text',def:e.textContent.trim(),group:e.dataset.cms.split('.')[0]})});
     d.querySelectorAll('[data-cms-href]').forEach(function(e){fields.push({key:e.dataset.cmsHref,kind:'link',def:e.getAttribute('href'),group:e.dataset.cmsHref.split('.')[0],label:e.textContent.trim()||e.getAttribute('aria-label')||''})});
+    d.querySelectorAll('[data-cms-src]').forEach(function(e){fields.push({key:e.dataset.cmsSrc,kind:'image',def:e.getAttribute('src')||'',group:e.dataset.cmsSrc.split('.')[0],label:e.getAttribute('alt')||'Image'})});
     builtinProjects=[];d.querySelectorAll('.project-card').forEach(function(c){
       var a=c.querySelector('.project-links a[href]'),i=c.querySelector('.project-image img');
       builtinProjects.push({title:c.dataset.title||'',category:c.dataset.category||'web-development',description:(c.querySelector('.project-desc')||{}).textContent||'',
@@ -112,7 +113,20 @@ function renderContent(){
   Object.keys(groups).forEach(function(g,gi){
     var box=el('details','card grp');if(gi===0)box.open=true;
     var sm=el('summary');sm.appendChild(el('span','',NAMES[g]||g));sm.appendChild(el('span','count',groups[g].length+' fields'));box.appendChild(sm);
+    groups[g].sort(function(a,b){return (b.kind==='image')-(a.kind==='image')});
     groups[g].forEach(function(f){
+      if(f.kind==='image'){
+        var iw=el('div','fld'),il=el('label'),inm=el('span','','Image: '+f.label),ir=el('span');
+        if(typeof overrides[f.key]==='string')ir.appendChild(el('span','dot','● edited '));
+        var irs=el('button','btn sm','Reset');irs.type='button';ir.appendChild(irs);il.appendChild(inm);il.appendChild(ir);iw.appendChild(il);
+        var cur0=typeof overrides[f.key]==='string'?overrides[f.key]:'';
+        var pvi=el('img','thumb');pvi.alt='';pvi.src=cur0||f.def;pvi.style.maxHeight='180px';
+        var iin=el('input');iin.placeholder='Image link — or press Upload';iin.value=cur0;
+        iin.oninput=function(){dirty[f.key]=iin.value.trim();pvi.src=iin.value.trim()||f.def;upd()};
+        var iup=el('button','btn sm','Upload new picture');iup.type='button';iup.style.margin='8px 0';
+        iup.onclick=function(){upload('image/*').then(function(j){iin.value=j.url;dirty[f.key]=j.url;pvi.src=j.url;upd();toast('Uploaded — press Save changes')}).catch(function(e){toast(String(e))})};
+        irs.onclick=function(){api('reset',{method:'POST',body:{key:f.key}}).then(function(j){if(j.ok){delete overrides[f.key];delete dirty[f.key];iin.value='';pvi.src=f.def;toast('Reset');upd()}})};
+        iw.appendChild(pvi);iw.appendChild(iup);iw.appendChild(iin);box.appendChild(iw);return}
       var cur=typeof overrides[f.key]==='string'?overrides[f.key]:f.def;
       var w=el('div','fld'),l=el('label'),nm=el('span','',(f.kind==='link'?'Link: '+(f.label||f.def):f.def.slice(0,48)+(f.def.length>48?'…':'')));
       var right=el('span');if(typeof overrides[f.key]==='string')right.appendChild(el('span','dot','● edited '));

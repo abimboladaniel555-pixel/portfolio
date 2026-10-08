@@ -129,6 +129,10 @@ export default async function handler(req, res) {
       if (!/^[a-z0-9_.-]{1,60}$/i.test(key)) return res.status(400).json({ ok: false, error: 'Bad key: ' + key });
       let v;
       if (key === 'projects') { v = cleanProjects(value); if (!v) return res.status(400).json({ ok: false, error: 'Invalid project data (check image/link URLs).' }); }
+      else if (/\.i\d+$/.test(key)) {
+        if (typeof value !== 'string' || !urlOk(value, false)) return res.status(400).json({ ok: false, error: 'Image must be an uploaded file or an https link.' });
+        v = value;
+      }
       else if (typeof value === 'string') {
         v = value.slice(0, 5000);
         if (/\.l\d+$/.test(key) && /^\s*(javascript|vbscript|data):/i.test(v)) return res.status(400).json({ ok: false, error: 'That link is not allowed.' });
